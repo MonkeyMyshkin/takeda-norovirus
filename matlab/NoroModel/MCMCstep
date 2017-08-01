@@ -20,7 +20,7 @@ function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,mu,theta,ContactMatrix,x
 %        term for 0-37 years and damping(2) is a baseline for all years
 
 %OUTPUTS
-%AcceptRejct=binary:1 ifaccept,0 if reject
+%AcceptReject=binary:1 ifaccept,0 if reject
 %AccProp=Proposedlikelihood+prior probabilties
 %LogLik=Log Likelihood value
 
