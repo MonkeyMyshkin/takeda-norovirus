@@ -56,7 +56,7 @@ end
 %ReportingParam
 
 % ReportingPrior=log(unifpdf(ReportingParam,0,1));
-for i=[5]
+for i=5
     if ReportingParam(i)<1 && ReportingParam(i)>0.1
         %ReportingPrior(i)=log(gampdf(ReportingParam(i),1,1)/(gamcdf(1,1,1)-0) );
         ReportingPrior(i)=log(normpdf(ReportingParam(i),0.5,0.05)/(normcdf(1,0.5,0.05)-normcdf(0.1,0.5,0.05)) );
@@ -98,7 +98,11 @@ for i=1:9
 end
 
 %damping
-dampPrior=[log(unifpdf(damping(1),0,1)),log(normpdf(damping(2),1e-3,1e-4)/(normcdf(1e-3,1e-3,1e-4)-normcdf(9e-7,1e-3,1e-4)))];
+if damping(2)<1e-3 && damping(2)>9e-7
+    dampPrior=[log(unifpdf(damping(1),0,1)),log(normpdf(damping(2),1e-3,1e-4)/(normcdf(1e-3,1e-3,1e-4)-normcdf(9e-7,1e-3,1e-4)))];
+else
+    dampPrior=log(0);
+end
 
 %prior on R0
 R0=MakeR0( Param(1:11) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
