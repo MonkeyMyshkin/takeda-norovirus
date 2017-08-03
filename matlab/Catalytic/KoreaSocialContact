@@ -1,13 +1,13 @@
 %script for handling Korean social contact data
 
 %clear all
-load('Korean_Contact_Survey.mat')   %this is the extracted data from https://doi.org/10.3886/ICPSR35335.v1
+load('data/Korean_Contact_Survey.mat')   %this is the extracted data from https://doi.org/10.3886/ICPSR35335.v1
 maxAge=76;                          %set maximum age +1 for MATLAB indexing
 IndexMat=[2:10;1,3:10;1:2,4:10;1:3,5:10;1:4,6:10;1:5,7:10;1:6,8:10;1:7,9:10;1:8,10;1:9];
                                     %handy indexing for each household
                                     %member contacts
                                     
-load('M.mat')   %population sizes for Korea
+load('data/M.mat')   %population sizes for Korea
 N=M(1:maxAge-1);
 N(maxAge)=sum(M(maxAge:end));
 M=N;
