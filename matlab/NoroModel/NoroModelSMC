@@ -94,12 +94,17 @@ for IterIndex=1:50
     Weights=Weights/nansum(Weights);
     Weights(isnan(Weights))=0;
     
-    %%%% Resample particles using weights %%%%
-    NewPARTICLEind=datasample(1:NumberParticles,NumberParticles,'Weights',Weights);
-    ResampledPARTICLE=PARTICLE(NewPARTICLEind,:);
-        %Note this renders the weights equal so they are ignored in the
-        %later weight calculation
     
+    %%%% RESAMPLING %%%%
+    if ESS(Weights)/NumberParticles < 0.5
+        %%%% Resample particles using weights %%%%
+        NewPARTICLEind=datasample(1:NumberParticles,NumberParticles,'Weights',Weights);
+        ResampledPARTICLE=PARTICLE(NewPARTICLEind,:);
+        Weights=1/NumberParticles*ones(1,NumberParticles);
+    else
+        ResampledPARTICLE=PARTICLE;
+    end
+
     %%%% Propagate current particles %%%%
     %In order to improve the performane of the parfor loop I slice the
     %particle
@@ -136,7 +141,7 @@ for IterIndex=1:50
         %%%% Propose new particle %%%%%
         ParamProp=ParamCurrent; %keep old parameters for fixed parameters
         
-        if IterIndex>1 && 0.5*rand(1)<ESS(Weights)/NumberParticles  %this adapts if ESS is half NumberParticles and sometimes if it is higher than that
+        if IterIndex>1 && rand(1)<0.9  %this adapts 90% of the time
             %save the covariance for the transition kernel
             adapt=cov(PARTICLE(:,[2,3,4,5,6,8,10,12:17,18,19,20,21:22,23:end]))* 2; 
             %indexes correspond to the parameters we are estimating
@@ -210,7 +215,7 @@ for IterIndex=1:50
     AccCurrent(isinf(AccCurrent))=nan; %ignore infinite values
     AccCurrent(AccCurrent<-1e10)=nan;  %truncate at -1e10
     %%%% Calculate Weights %%%%
-    Weights=(AccCurrent+abs(min(AccCurrent)))./sum(TransitionKernel);
+    Weights=Weights.*(AccCurrent+abs(min(AccCurrent))+1)./sum(TransitionKernel);
     
     Like(IterIndex,:)=LL;
     WeightHistory(IterIndex,:)=Weights;
