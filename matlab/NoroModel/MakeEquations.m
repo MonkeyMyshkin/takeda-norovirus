@@ -13,7 +13,6 @@ function [ Equations ] = MakeEquations(param,mu,theta,StratifiedContactMatrix,ag
 %   sigma=proportion symptomatic
 %   psi=rate infected individuals become asymptomatic
 %   theta= susceptibility
-%   chi= rate innate immunity is lost
 %mu=death rate
 %StratifiedContactMatrix= Mixing between age groups, split by age group not
 %                         year
@@ -40,7 +39,7 @@ NoAgeGroups=length(ageGroupBreaks);
 age=1/365;  
 
 %DECLARE symbolic variables
-M=sym('M',[Lmax,1]);S=sym('S',[Lmax,1]);E1=sym('E1',[Lmax,1]);E2=sym('E2',[Lmax,1]);I=sym('I',[Lmax,1]);A=sym('A',[Lmax,1]);R=sym('R',[Lmax,1]);Im=sym('Im',[Lmax,1]);
+M=sym('M',[Lmax,1]);S=sym('S',[Lmax,1]);E1=sym('E1',[Lmax,1]);E2=sym('E2',[Lmax,1]);I=sym('I',[Lmax,1]);A=sym('A',[Lmax,1]);R=sym('R',[Lmax,1]);
 syms t
 
 
