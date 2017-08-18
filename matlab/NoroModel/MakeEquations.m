@@ -26,7 +26,7 @@ function [ Equations ] = MakeEquations(param,mu,theta,StratifiedContactMatrix,ag
 %assign parameter names
 alpha=param(1); q=param(2); omega1=param(3); omega2=param(4); nu=param(5); 
 delta=param(6); epsilon=param(7); sigma=param(8); psi=param(9); 
-gamma=param(10); chi=param(11);
+gamma=param(10); 
 
 C=StratifiedContactMatrix;
 
@@ -62,7 +62,7 @@ for index=1:Lmax
 end
 
 %closed population so births equal all deaths
-BIRTHS=sum(mu.*(M+S+E1+E2+I+A+Im+R).');
+BIRTHS=sum(mu.*(M+S+E1+E2+I+A+R).');
 
 %EQUATIONS
 %age 1
@@ -72,8 +72,7 @@ exposed1(1)= FOI(1)*S(1) - (epsilon+mu(1))*E1(1) - age*E1(1);
 exposed2(1)= epsilon*E1(1) - (epsilon+mu(1))*E2(1) - age*E2(1);
 inf(1)= sigma*epsilon*E2(1) - (psi+mu(1))*I(1) - age*I(1);
 asymp(1)= (1-sigma)*epsilon*E2(1) + psi*I(1) + FOI(1)*theta*R(1) - (gamma+mu(1))*A(1) - age*A(1);
-immune(1)= gamma*A(1) - (chi + mu(1))*Im(1)  - age*Im(1) ;
-rec(1)= chi*Im(1) - FOI(1)*theta*R(1) - (delta+mu(1))*R(1) - age*R(1);
+rec(1)= gamma*A(1) - FOI(1)*theta*R(1) - (delta+mu(1))*R(1) - age*R(1);
 %bookkeeping, efflux from infectious class
 Cas(1)=psi*I(1);
 AllCases(1)=epsilon*E2(1);
@@ -93,9 +92,7 @@ for index=2:Lmax-1
     
     asymp(index)= (1-sigma)*epsilon*E2(index) + psi*I(index) + FOI(index)*theta*R(index) - (gamma+mu(index))*A(index) + age*(A(index-1)-A(index));
     
-    immune(index)= gamma*A(index) - (chi + mu(index))*Im(index) + age*(Im(index-1)-Im(index));
-    
-    rec(index)=chi*Im(index) - FOI(index)*theta*R(index) - (delta+mu(index))*R(index) + age*(R(index-1)-R(index));
+    rec(index)=gamma*A(index) - FOI(index)*theta*R(index) - (delta+mu(index))*R(index) + age*(R(index-1)-R(index));
     
     Cas(index) = psi*I(index);
     
@@ -109,12 +106,11 @@ exposed1(Lmax)= FOI(Lmax)*S(Lmax) - (epsilon+mu(Lmax))*E1(Lmax) + age*(E1(Lmax-1
 exposed2(Lmax)= epsilon*E1(Lmax) - (epsilon+mu(Lmax))*E2(Lmax) + age*(E2(Lmax-1));
 inf(Lmax)= sigma*epsilon*E2(Lmax) - (psi+mu(Lmax))*I(Lmax) + age*(I(Lmax-1));
 asymp(Lmax)= (1-sigma)*epsilon*E2(Lmax) + psi*I(Lmax) + FOI(Lmax)*theta*R(Lmax) - (gamma+mu(Lmax))*A(Lmax) + age*(A(Lmax-1));
-immune(Lmax)= gamma*A(Lmax) - (chi + mu(Lmax))*Im(Lmax) + age*(Im(Lmax-1));
-rec(Lmax)=chi*Im(Lmax) - FOI(Lmax)*theta*R(Lmax) - (delta+mu(Lmax))*R(Lmax) + age*(R(Lmax-1));
+rec(Lmax)=gamma*A(Lmax) - FOI(Lmax)*theta*R(Lmax) - (delta+mu(Lmax))*R(Lmax) + age*(R(Lmax-1));
 Cas(Lmax) = psi*I(Lmax);
 AllCases(Lmax)=epsilon*E2(Lmax);
 
 %concatenate equations
-Equations=[mat.';sus.';exposed1.';exposed2.';inf.';asymp.';immune.';rec.';Cas.';AllCases.'];
+Equations=[mat.';sus.';exposed1.';exposed2.';inf.';asymp.';rec.';Cas.';AllCases.'];
 end
 
