@@ -19,7 +19,7 @@ function [ TIME,SimulationResult ] = SimulateSeasons( Param,mu ,theta, ContactMa
 Lmax=81;
 
 %options for solver, nonnegative and high degree of accuracy
-options=odeset('NonNegative',1:10*Lmax,'RelTol',1e-10,'AbsTol',1e-10);
+options=odeset('NonNegative',1:9*Lmax,'RelTol',1e-10,'AbsTol',1e-10);
 
 %measure one season from week 33 to week 33 of following year
 %time increments are 7 days

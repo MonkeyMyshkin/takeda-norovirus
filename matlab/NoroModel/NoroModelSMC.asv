@@ -5,10 +5,16 @@
 clear all
 
 %DATA
-load('GermanCaseNotification.mat')  %survstat data
-load('GermanPopulation.mat')        %German population sizes per age
-load('GermanContactData.mat')       %Contact data from POLYMOD
-load('GermanParticipantData.mat')   %participant data from POLYMOD
+FileName   = 'input.mat';
+FolderName = 'GermanCaseNotification';
+File       = fullfile(FolderName, FileName);
+load(File); %survstat data
+FolderName = 'GermanPopulation';
+File       = fullfile(FolderName, FileName);
+load(File);
+load('data/GermanPopulation.mat')        %German population sizes per age
+load('data/GermanContactData.mat')       %Contact data from POLYMOD
+load('data/GermanParticipantData.mat')   %participant data from POLYMOD
 
 %AGE GROUPS
 ageGroupBreaks=[8 18 26 37 50 70];
@@ -31,7 +37,7 @@ rng('shuffle')
 %specifics
 noSeasons=9;    %number of seasons
 noParam=27;     %number of parameters to be estimated
-NumberParticles=5000;
+NumberParticles=10;
 
 %PROPOSAL DISTRIBUTION
 proposal=(0.1^2)*eye(noParam)/noParam;
@@ -86,7 +92,7 @@ Weights=ones(1,NumberParticles);
 
 tic
 %%%% Start filter loop %%%%
-for IterIndex=1:100
+for IterIndex=1:2
     
     PARTICLEhistory(:,:,IterIndex)=PARTICLE;
     
@@ -114,7 +120,7 @@ for IterIndex=1:100
     DispSliceResampledPARTICLE=ResampledPARTICLE(:,17);
     kSliceResampledPARTICLE=ResampledPARTICLE(:,18);
     dSliceResampledPARTICLE=ResampledPARTICLE(:,19);
-    dampSliceResampledPARTICLE=ResampledPARTICLE(:,20:21);
+    quenchSliceResampledPARTICLE=ResampledPARTICLE(:,20:21);
     thetaSliceResampledPARTICLE=ResampledPARTICLE(:,22:end);
     
     %%%perform MCMC step on each of the particles
@@ -162,7 +168,7 @@ for IterIndex=1:100
         DispersionProp=New(14);
         kProp=New(15);
         dProp=New(16);
-        dampProp=New(17:18);
+        quenchProp=New(17:18);
         thetaProp=New(19:end);
         
         %ParamPropParticle
@@ -224,5 +230,5 @@ for IterIndex=1:100
     save('PARTICLEtest')
     delete(gcp)
     reset(symengine)
-    fprintf('Iteration is: %d ',IterIndex)
+    fprintf('Iteration is: %d',IterIndex)
 end
