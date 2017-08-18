@@ -1,3 +1,4 @@
+<<<<<<< HEAD:matlab/NoroModel/NoroModelSMC.m
 %script to run particle filter
 
 %%%% Preliminaries %%%%
@@ -226,3 +227,6 @@ for IterIndex=1:100
     reset(symengine)
     fprintf('Iteration is: %d ',IterIndex)
 end
+=======
+t
+>>>>>>> 92e58aeafacdc014b6d2147d8ed6e2e47ec02d13:matlab/NoroModel/NoroModelSMC
