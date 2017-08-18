@@ -56,7 +56,7 @@ OUTPUTS
 
 MAKEEQUATIONS
 INPUTS
-	Param						Parameter vector including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi, gamma, theta and chi. Symbolic.
+	Param						Parameter vector including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi, gamma, theta. Symbolic.
 	mu							Vector of death rates per annual age group. Symbolic.
 	theta						Susceptibility of recovered individuals. Symbolic scalar at this stage.
 	StratifiedContactMatrix 	Matrix of contact probabilities between age groups. Symbolic.
@@ -66,7 +66,7 @@ OUTPUTS
 
 SIMULATESEASONS
 INPUTS
-	Param 						Parameters including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi and chi. Vector of doubles
+	Param 						Parameters including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi. Vector of doubles
 	mu
 	theta						Vector of per-season susceptibility of recovered individuals. 
 	ContactMatrix				Matrix of contact probabilities for each age group.
@@ -101,7 +101,7 @@ OUTPUTS
 
 PRIORS
 INPUTS
-	Param						Parameters including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi and chi. Vector of doubles
+	Param						Parameters including alpha, q, omega1, omega2, nu, delta, epsilon, sigma, psi. Vector of doubles
 	theta						Vector of per-season susceptibility of recovered individuals. 
 	ReportingParam				Vector of baseline reporting values. Value is shared for 18-26 and 26-37 year olds
 	Dispersion					Dispersion parameter for negative binomial likelihood
