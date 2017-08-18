@@ -3,7 +3,7 @@ function [ R0 ] = MakeR0(Param,PopulationSize,ContactMatrix, mu, ageGroupBreaks)
 
 %INPUTS
 %Param=vector of alpha, q, omega1, omega2, nu, delta, epsilon, sigma,
-%       psi, gamma, chi
+%       psi, gamma
 %PopulationSize=vector of agegroup sizes
 %ContactMatrix=matrix of contact probabilities
 %mu=vector of death rates per age
@@ -23,7 +23,6 @@ epsilon=Param(7);
 sigma=Param(8);
 psi=Param(9);
 gamma=Param(10);
-chi=Param(11);
 
 %normalise population size
 PopulationSize=PopulationSize/(sum(PopulationSize));

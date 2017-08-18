@@ -2,8 +2,8 @@ function [ PriorProbabilities ] = Priors(Param,theta,ReportingParam,Dispersion,k
 %%PRIORS takes proposed values of each parameter and returns sum of log prior probability
 
 %INPUTS
-%Param=vector including alpha, q,omega1,omega2,nu, delta, epsilon, sigma,
-%      psi and chi
+%Param=vector including alpha, q,omega1,omega2,nu, delta, epsilon, sigma
+%               and psi 
 %theta=vector of susceptibility of recovered individuals per season
 %ReportingParam= reporting baseline values with one value for 18-26 and
 %                26-37
@@ -47,27 +47,18 @@ end
 
 
 %recovery rate
-if Param(10)<1 && Param(10)>1/365
-    gammaPrior = log( gampdf(Param(10),1,1)/(gamcdf(1,1,1)-gamcdf(1/365,1,1)) );
+if Param(10)<0.5 && Param(10)>1/365
+    gammaPrior = log( gampdf(Param(10),1,1)/(gamcdf(0.5,1,1)-gamcdf(1/365,1,1)) );
 else
     gammaPrior=log(0);
 end
 
 %ReportingParam
 
-% ReportingPrior=log(unifpdf(ReportingParam,0,1));
-for i=5
-    if ReportingParam(i)<1 && ReportingParam(i)>0.1
-        %ReportingPrior(i)=log(gampdf(ReportingParam(i),1,1)/(gamcdf(1,1,1)-0) );
-        ReportingPrior(i)=log(normpdf(ReportingParam(i),0.5,0.05)/(normcdf(1,0.5,0.05)-normcdf(0.1,0.5,0.05)) );
-    else
-        ReportingPrior(i)=log(0);
-    end
-end
-for i=[1,6]
-    if ReportingParam(i)<1 && ReportingParam(i)>0.1
+for i=1:6
+    if ReportingParam(i)<1 && ReportingParam(i)>0
         
-        ReportingPrior(i)=log(normpdf(ReportingParam(i),1,0.05)/(normcdf(1,1,0.05)-normcdf(0.1,1,0.05)) );
+        ReportingPrior(i)=log(normpdf(ReportingParam(i),1,0.1)/(normcdf(1,1,0.1)-normcdf(0,1,0.1)) );
     else
         ReportingPrior(i)=log(0);
     end
@@ -105,7 +96,7 @@ else
 end
 
 %prior on R0
-R0=MakeR0( Param(1:11) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
+R0=MakeR0( Param(1:10) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
 if R0>1
     R0Prior=log(normpdf(R0,15,1));
 else
