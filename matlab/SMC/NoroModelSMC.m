@@ -1,4 +1,4 @@
-<<<<<<< HEAD:matlab/NoroModel/NoroModelSMC.m
+addpath(genpath('C:/Users/kamg2/Documents/takeda-norovirus/matlab'))
 %script to run particle filter
 
 %%%% Preliminaries %%%%
@@ -32,7 +32,7 @@ rng('shuffle')
 %specifics
 noSeasons=9;    %number of seasons
 noParam=27;     %number of parameters to be estimated
-NumberParticles=5000;
+NumberParticles=5;
 
 %PROPOSAL DISTRIBUTION
 proposal=(0.1^2)*eye(noParam)/noParam;
