@@ -17,12 +17,12 @@ Lmax=length(mu);
 %Define parameter names
 alpha=Param(1);
 q=Param(2);
-nu=Param(5);
-delta=Param(6);
-epsilon=Param(7);
-sigma=Param(8);
-psi=Param(9);
-gamma=Param(10);
+nu=Param(4);
+delta=Param(5);
+epsilon=Param(6);
+sigma=Param(7);
+psi=Param(8);
+gamma=Param(9);
 
 %normalise population size
 PopulationSize=PopulationSize/(sum(PopulationSize));

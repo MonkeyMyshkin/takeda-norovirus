@@ -1,4 +1,4 @@
-function [ Equations ] = MakeEquations(param,mu,theta,StratifiedContactMatrix,ageGroupBreaks )
+function [ Equations ] = MakeEquations(param,omega2,mu,theta,StratifiedContactMatrix,ageGroupBreaks )
 %%
 %MakeEquations makes the equations to be build into an ODE script
 %INPUTS
@@ -6,13 +6,13 @@ function [ Equations ] = MakeEquations(param,mu,theta,StratifiedContactMatrix,ag
 %   alpha=loss of maternal antibodies
 %   q=tranmissability
 %   omega1= seasonal amplitude
-%   omega2=seasonal offset
 %   nu=scaling of asymptomatic infectiousness
 %   delta=loss of immunity
 %   epsilon=rate of latency loss
 %   sigma=proportion symptomatic
 %   psi=rate infected individuals become asymptomatic
 %   theta= susceptibility
+%   omega2=seasonal offset- vector of fixed values
 %mu=death rate
 %StratifiedContactMatrix= Mixing between age groups, split by age group not
 %                         year
@@ -23,9 +23,9 @@ function [ Equations ] = MakeEquations(param,mu,theta,StratifiedContactMatrix,ag
 
 %%
 %assign parameter names
-alpha=param(1); q=param(2); omega1=param(3); omega2=param(4); nu=param(5); 
-delta=param(6); epsilon=param(7); sigma=param(8); psi=param(9); 
-gamma=param(10); 
+alpha=param(1); q=param(2); omega1=param(3);  nu=param(4); 
+delta=param(5); epsilon=param(6); sigma=param(7); psi=param(8); 
+gamma=param(9); 
 
 C=StratifiedContactMatrix;
 
@@ -44,7 +44,7 @@ syms t
 
 
 %seasonal forcing term
-Z=(1+omega1*cos(2*pi*t/364+omega2));
+Z=(1+omega1.*cos(2*pi*t/364+omega2));
 
 %calculate force of infection
 for index=1:Lmax
@@ -53,10 +53,10 @@ for index=1:Lmax
     %force of infection depends on transmission parameter q, seasonal
     %forcing term Z, contact matrix C, infectious symptomatic class I and
     %infectious asymptomatic class A
-    FOI(index)= q*Z*C(ageGroupIndex,1)*sum(I(1:ageGroupBreaks(1))+nu*A(1:ageGroupBreaks(1)));
+    FOI(index)= q*Z(ageGroupIndex)*C(ageGroupIndex,1)*sum(I(1:ageGroupBreaks(1))+nu*A(1:ageGroupBreaks(1)));
     for jndex = 2 : NoAgeGroups
         FOI(index)=FOI(index) ...
-                    + q*Z*C(ageGroupIndex,jndex)*sum(I(ageGroupBreaks(jndex-1)+1:ageGroupBreaks(jndex))+nu*A(ageGroupBreaks(jndex-1)+1:ageGroupBreaks(jndex)));
+                    + q*Z(ageGroupIndex)*C(ageGroupIndex,jndex)*sum(I(ageGroupBreaks(jndex-1)+1:ageGroupBreaks(jndex))+nu*A(ageGroupBreaks(jndex-1)+1:ageGroupBreaks(jndex)));
     end
 end
 

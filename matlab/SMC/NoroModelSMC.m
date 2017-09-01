@@ -1,4 +1,4 @@
-<<<<<<< HEAD:matlab/NoroModel/NoroModelSMC.m
+addpath(genpath('C:/Users/kamg2/Documents/takeda-norovirus/matlab'))
 %script to run particle filter
 
 %%%% Preliminaries %%%%
@@ -31,8 +31,11 @@ rng('shuffle')
 
 %specifics
 noSeasons=9;    %number of seasons
-noParam=27;     %number of parameters to be estimated
-NumberParticles=5000;
+noParam=26;     %number of parameters to be estimated
+NumberParticles=50;
+
+%seasonal offset for each age group
+omega2=[0.29345  0.37976  0.56963  0.60415  0.82855  1.0724  1.0357];
 
 %PROPOSAL DISTRIBUTION
 proposal=(0.1^2)*eye(noParam)/noParam;
@@ -43,7 +46,6 @@ parfor particleIndex=1:NumberParticles
     alphastart=exp(-5.98405);   %from serology FIXED
     qstart=(unifrnd(10,400));   %arbitrary range- does not have explicit prior
     omega1start=unifrnd(0.05,0.5);  %from prior
-    omega2start=gamrnd(1,1);        %from prior
     nustart=unifrnd(0,1);           %from prior
     deltastart=normrnd(1/(5.1*365), 5e-5);%unifrnd(1/(30*365), 1);  %broader than informative prior
     epsilonstart=1;   %never estimate this- duration of latency
@@ -54,8 +56,8 @@ parfor particleIndex=1:NumberParticles
     ReportingStart=[unifrnd(0,1),unifrnd(0,1),unifrnd(0,1),unifrnd(0,1),unifrnd(0,1), unifrnd(0,1)]; %not full prior in all cases- can adjust
     
     
-    ParamCurrent=abs([alphastart, qstart, omega1start, omega2start, nustart, ...
-                    deltastart, epsilonstart, sigmastart, psistart, gammastart, ReportingStart]);
+    ParamCurrent=abs([alphastart, qstart, omega1start, nustart, ...
+        deltastart, epsilonstart, sigmastart, psistart, gammastart, ReportingStart]);
     
     %dispersion
     DispersionPar=unifrnd(0,0.4);   %from prior
@@ -97,26 +99,24 @@ for IterIndex=1:100
     
     
     %%%% RESAMPLING %%%%
-    if ESS(Weights)/NumberParticles < 0.5
-        %%%% Resample particles using weights %%%%
-        NewPARTICLEind=datasample(1:NumberParticles,NumberParticles,'Weights',Weights);
-        ResampledPARTICLE=PARTICLE(NewPARTICLEind,:);
-        Weights=1/NumberParticles*ones(1,NumberParticles);
-    else
-        ResampledPARTICLE=PARTICLE;
-    end
-
+    
+    %%%% Resample particles using weights %%%%
+    NewPARTICLEind=datasample(1:NumberParticles,NumberParticles,'Weights',Weights);
+    ResampledPARTICLE=PARTICLE(NewPARTICLEind,:);
+    Weights=1/NumberParticles*ones(1,NumberParticles);
+    
+    
     %%%% Propagate current particles %%%%
     %In order to improve the performane of the parfor loop I slice the
     %particle
     
     %sliced resampled particle
-    ParamSliceResampledPARTICLE=ResampledPARTICLE(:,1:16);
-    DispSliceResampledPARTICLE=ResampledPARTICLE(:,17);
-    kSliceResampledPARTICLE=ResampledPARTICLE(:,18);
-    dSliceResampledPARTICLE=ResampledPARTICLE(:,19);
-    dampSliceResampledPARTICLE=ResampledPARTICLE(:,20:21);
-    thetaSliceResampledPARTICLE=ResampledPARTICLE(:,22:end);
+    ParamSliceResampledPARTICLE=ResampledPARTICLE(:,1:15);
+    DispSliceResampledPARTICLE=ResampledPARTICLE(:,16);
+    kSliceResampledPARTICLE=ResampledPARTICLE(:,17);
+    dSliceResampledPARTICLE=ResampledPARTICLE(:,18);
+    dampSliceResampledPARTICLE=ResampledPARTICLE(:,19:20);
+    thetaSliceResampledPARTICLE=ResampledPARTICLE(:,21:end);
     
     %%%perform MCMC step on each of the particles
     parfor particleIndex=1:NumberParticles
@@ -133,10 +133,10 @@ for IterIndex=1:100
         
         %contactmatrix and ICS
         [ ContactMatrix ] = ContactTwist( ContactAgesPerAgeGroup, T, kPar ,dPar);
-        x0Current=MakeInitialConditions( ParamCurrent,thetaPar,mu,ContactMatrix);
+        x0Current=MakeInitialConditions( ParamCurrent,omega2,thetaPar,mu,ContactMatrix);
         
         %calculate LL and Priors
-        [ ~, AccCurrent(particleIndex) ,LL(particleIndex)] = MCMCstep(ParamCurrent,mu,thetaPar,ContactMatrix,x0Current,1,...
+        [ ~, AccCurrent(particleIndex) ,LL(particleIndex)] = MCMCstep(ParamCurrent,omega2,mu,thetaPar,ContactMatrix,x0Current,1,...
             ageGroupBreaks,GermanCaseNotification,PopulationSize,GermanPopulation,DispersionPar,kPar,dPar,dampPar);
         
         %%%% Propose new particle %%%%%
@@ -144,27 +144,27 @@ for IterIndex=1:100
         
         if IterIndex>1 && rand(1)<0.9  %this adapts 90% of the time
             %save the covariance for the transition kernel
-            adapt=cov(PARTICLE(:,[2,3,4,5,6,8,10,11:16,17,18,19,20:21,22:end]))* 2; 
+            adapt=cov(PARTICLE(:,[2,3,4,5,7,9,10:15,16,17,18,19:20,21:end]))* 2;
             %indexes correspond to the parameters we are estimating
             
-            New=(mvnrnd([ParamCurrent([2,3,4,5,6,8,10,11:16]),DispersionPar,kPar,dPar,dampPar,thetaPar],adapt));
-            TransitionKernelCovariance=validateCovMatrix(adapt);    
+            New=(mvnrnd([ParamCurrent([2,3,4,5,7,9,10:15]),DispersionPar,kPar,dPar,dampPar,thetaPar],adapt));
+            TransitionKernelCovariance=validateCovMatrix(adapt);
             %validateCovMatrix just makes sure no numerical error renders the covariance matrix non-positive-definite
         else
             %otherwise use proposal distribution defined at start
-            New=(mvnrnd([ParamCurrent([2,3,4,5,6,8,10,11:16]),DispersionPar,kPar,dPar,dampPar,thetaPar],proposal));
+            New=(mvnrnd([ParamCurrent([2,3,4,5,7,9,10:15]),DispersionPar,kPar,dPar,dampPar,thetaPar],proposal));
             TransitionKernelCovariance=proposal;
         end
         %assign proposed parameters
-        ParamProp(2:6)=New(1:5);
-        ParamProp(8)=New(6);
-        ParamProp(10)=New(7);
-        ParamProp(11:16)=New(8:13);
-        DispersionProp=New(14);
-        kProp=New(15);
-        dProp=New(16);
-        dampProp=New(17:18);
-        thetaProp=New(19:end);
+        ParamProp(2:5)=New(1:4);
+        ParamProp(7)=New(5);
+        ParamProp(9)=New(6);
+        ParamProp(10:15)=New(7:12);
+        DispersionProp=New(13);
+        kProp=New(14);
+        dProp=New(15);
+        dampProp=New(16:17);
+        thetaProp=New(18:end);
         
         %ParamPropParticle
         PRP=[ParamProp DispersionProp kProp dProp dampProp thetaProp];
@@ -174,7 +174,7 @@ for IterIndex=1:100
         
         %%%% Test proposed values are in range %%%%
         %two conditions- positive values and within prior ranges
-        OUTofBOUNDS= min(PRP)<0 || isinf(Priors(ParamProp(1:10),thetaProp,ParamProp(11:16),DispersionProp,...
+        OUTofBOUNDS= min(PRP)<0 || isinf(Priors(ParamProp(1:9),thetaProp,ParamProp(10:15),DispersionProp,...
             kProp,dProp,dampProp,GermanPopulation,ContactMatrixProp,mu,ageGroupBreaks));
         
         if  OUTofBOUNDS  %check positive and in bounds
@@ -183,10 +183,10 @@ for IterIndex=1:100
             AcceptReject=0;
         else
             % Initial conditions
-            x0Prop=MakeInitialConditions(ParamProp,thetaProp,mu,ContactMatrixProp);
+            x0Prop=MakeInitialConditions(ParamProp,omega2,thetaProp,mu,ContactMatrixProp);
             
             %MCMC step
-            [ AcceptReject, AccProp(particleIndex) ,LLProp(particleIndex)] = MCMCstep(ParamProp,mu,thetaProp,ContactMatrixProp,x0Prop,AccCurrent(particleIndex),...
+            [ AcceptReject, AccProp(particleIndex) ,LLProp(particleIndex)] = MCMCstep(ParamProp,omega2,mu,thetaProp,ContactMatrixProp,x0Prop,AccCurrent(particleIndex),...
                 ageGroupBreaks,GermanCaseNotification,PopulationSize,GermanPopulation,DispersionProp,kProp,dProp,dampProp);
             
         end
@@ -207,16 +207,15 @@ for IterIndex=1:100
         end
         
         
-        TransitionKernel(particleIndex)=mvnpdf(nP([2,3,4,5,6,8,10,11:16,17,18,19,20:21,22:end]),CurrentResampledPARTICLE([2,3,4,5,6,8,10,11:16,17,18,19,20:21,22:end]),TransitionKernelCovariance);
+        TransitionKernel(particleIndex)=mvnpdf(nP([2,3,4,5,7,9,10:15,16,17,18,19:20,21:end]),CurrentResampledPARTICLE([2,3,4,5,7,9,10:15,16,17,18,19:20,21:end]),TransitionKernelCovariance);
         newPARTICLE(particleIndex,:)=nP;
     end
     
     PARTICLE=newPARTICLE;
     
     AccCurrent(isinf(AccCurrent))=nan; %ignore infinite values
-    AccCurrent(AccCurrent<-1e10)=nan;  %truncate at -1e10
     %%%% Calculate Weights %%%%
-    Weights=Weights.*(AccCurrent+abs(min(AccCurrent))+1)./sum(TransitionKernel);
+    Weights=(AccCurrent+abs(min(AccCurrent))+1)./sum(TransitionKernel);
     
     Like(IterIndex,:)=LL;
     WeightHistory(IterIndex,:)=Weights;

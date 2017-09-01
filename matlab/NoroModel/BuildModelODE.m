@@ -11,13 +11,14 @@ ageGroupBreaks=[8 18 26 37 50 70];
 noAgeGroups=length(ageGroupBreaks)+1;
 
 %DECLARE symbolic variables
-syms t alpha  q omega1 omega2  nu  delta  epsilon  sigma  psi gamma theta
+syms t alpha  q omega1  nu  delta  epsilon  sigma  psi gamma theta
 StratifiedContactMatrix =sym('StratifiedContactMatrix',[length(ageGroupBreaks)+1,length(ageGroupBreaks)+1]);
+omega2=sym('omega2',[1,noAgeGroups]);
 mu=sym('mu',[1,Lmax]);
-param=sym('param',[1,10]);
+param=sym('param',[1,9]);
 
 %CALL MakeEquations function to create symbolic equations
-[Equations] = MakeEquations(param ,mu, theta, StratifiedContactMatrix ,ageGroupBreaks);
+[Equations] = MakeEquations(param ,omega2, mu, theta, StratifiedContactMatrix ,ageGroupBreaks);
 
 %REPLACE symbolic variable names with one variable, Y
 M=sym('M',[Lmax,1]);S=sym('S',[Lmax,1]);E1=sym('E1',[Lmax,1]);E2=sym('E2',[Lmax,1]);I=sym('I',[Lmax,1]);A=sym('A',[Lmax,1]);R=sym('R',[Lmax,1]);
@@ -29,4 +30,4 @@ EQNS=subs(Equations,[M.',S.',E1.',E2.',I.',A.',R.'],Y.');
 
 %use MATLAB built in function to optimise model equations for use with ODE
 %solvers
-matlabFunction(EQNS, 'file', 'NoroModelARODE','vars', {t, Y,param,mu ,theta,StratifiedContactMatrix});
+matlabFunction(EQNS, 'file', 'NoroModelARODE','vars', {t, Y,param,omega2,mu ,theta,StratifiedContactMatrix});
