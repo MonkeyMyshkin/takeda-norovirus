@@ -1,9 +1,10 @@
-function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,mu,theta,ContactMatrix,x0,AccCurrent,ageGroupBreaks,GermanCaseNotification,PopulationSize,GermanPopulation,Dispersion,k,d,damping)
+function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,omega2,mu,theta,ContactMatrix,x0,AccCurrent,ageGroupBreaks,GermanCaseNotification,PopulationSize,GermanPopulation,Dispersion,k,d,damping)
 %%
 %MCMCstep Takes proposed particle values and assesses likelihood and Bayes formula
 
 %INPUTS
 %param=parameters includig reporting parameters
+%omega2=vector of seasonal offsets for each age group
 %mu=death rates per age
 %theta=susceptibilities of recovered individuals per season
 %ContactMatrix=probabilities of contact between age groups
@@ -26,7 +27,7 @@ function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,mu,theta,ContactMatrix,x
 
 %%
 %Simulate each season
-[ ~,SimulationResult ] =SimulateSeasons(Param(1:10),mu,theta,ContactMatrix,x0);
+[ ~,SimulationResult ] =SimulateSeasons(Param(1:9),omega2,mu,theta,ContactMatrix,x0);
 
 %stratify data
 [ StratifiedCases ] = AgeStratify( GermanCaseNotification, ageGroupBreaks );
@@ -36,14 +37,14 @@ function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,mu,theta,ContactMatrix,x
 ModelOutput=ModelOutput*sum(PopulationSize);
 
 %REPORTING MODEL
-[ ReportingBaseline ] = [Param(11) Param(12)*ones(1,2) Param(13) Param(14) Param(15) Param(16)];
+[ ReportingBaseline ] = [Param(10) Param(11)*ones(1,2) Param(12) Param(13) Param(14) Param(15)];
 [ ReportedInfectionNumber] = CappedReporting( ModelOutput, ReportingBaseline, damping );
 
 %LIKELIHOOD
 [ LogLik ] = NBLikelihood( StratifiedCases, ReportedInfectionNumber, Dispersion);
 
 %PRIOR PROBABILITIES
-PriorProbs=Priors(Param(1:10),theta,Param(11:16),Dispersion,k,d,damping,GermanPopulation,ContactMatrix,mu,ageGroupBreaks);
+PriorProbs=Priors(Param(1:9),theta,Param(10:15),Dispersion,k,d,damping,GermanPopulation,ContactMatrix,mu,ageGroupBreaks);
 
 %ACCEPTANCE
 AccProp=LogLik+PriorProbs;

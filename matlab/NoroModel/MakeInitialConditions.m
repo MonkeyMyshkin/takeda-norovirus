@@ -1,4 +1,4 @@
-function [ InitialConditions] = MakeInitialConditions( Param,theta,mu,ContactMatrix )
+function [ InitialConditions] = MakeInitialConditions( Param,omega2,theta,mu,ContactMatrix )
 %%
 %MakeInitialConditions simulates models to arrive at stable age
 %distribution, creating x0 for simulateSeasons
@@ -25,11 +25,11 @@ CM=reshape(ContactMatrix,[],1)/1e6;
 %Burn in period of 50 years
 tspan=1:1:50*365;
 
-[TIME,X]=ode45(@(t,Y)NoroModelARODE(t,Y,Param,mu,theta(1),CM),tspan,[1e6*fixedPoints,zeros(1,2*Lmax)],options);  %ICSarescaled up to improve accuracy
+[TIME,X]=ode45(@(t,Y)NoroModelARODE(t,Y,Param,omega2,mu,theta(1),CM),tspan,[1e6*fixedPoints,zeros(1,2*Lmax)],options);  %ICSarescaled up to improve accuracy
 
 %time to average of 2 years
 
-[TIMENEW , Xnew ]=ode45(@(t,Y)NoroModelARODE(t,Y,Param,mu ,theta(1),CM),(TIME(end):1:TIME(end)+2*365),X(end,:),options);
+[TIMENEW , Xnew ]=ode45(@(t,Y)NoroModelARODE(t,Y,Param,omega2,mu ,theta(1),CM),(TIME(end):1:TIME(end)+2*365),X(end,:),options);
 
 %
 InitialConditions = mean(Xnew(:,1:7*Lmax));

@@ -20,26 +20,24 @@ function [ PriorProbabilities ] = Priors(Param,theta,ReportingParam,Dispersion,k
 %OUTPUTS
 %PriorProbabilities=sum of log prior probabilities 
 %%
-%seasonal forncing amplitude
+%seasonal forcing amplitude
 omega1Prior = log(unifpdf(Param(3),0.01,0.5));
 
-%seasonal forcing offest
-omega2Prior = log(gampdf(Param(4),1,1));
 
 %scaling of asymptomatic infectiousness
-nuPrior = log(unifpdf(Param(5)));
+nuPrior = log(unifpdf(Param(4)));
 
 %loss of immunity
-if Param(6)<1 && Param(6)>1/(30*365)
-    deltaPrior = log( normpdf(Param(6),1/(5.1*365), 5e-5)/(normcdf(1,1/(5.1*365), 5e-5)-normcdf(1/(30*365),1/(5.1*365), 5e-5)) );
+if Param(5)<1 && Param(5)>1/(30*365)
+    deltaPrior = log( normpdf(Param(5),1/(5.1*365), 5e-5)/(normcdf(1,1/(5.1*365), 5e-5)-normcdf(1/(30*365),1/(5.1*365), 5e-5)) );
 else
     deltaPrior =log(0);
 end
 %deltaPrior = log( unifpdf(ParamVector(6),1/(30*365),1));
 
 %proportion of symptomatic
-if Param(8)<=1 && Param(8)>=0
-    sigmaPrior = log(normpdf(Param(8),0.735415,0.0960897));    %from challenge study data and ASYMP_PROB program
+if Param(7)<=1 && Param(7)>=0
+    sigmaPrior = log(normpdf(Param(7),0.735415,0.0960897));    %from challenge study data and ASYMP_PROB program
 else
     sigmaPrior=log(0);
 end
@@ -47,8 +45,8 @@ end
 
 
 %recovery rate
-if Param(10)<0.5 && Param(10)>1/365
-    gammaPrior = log( gampdf(Param(10),1,1)/(gamcdf(0.5,1,1)-gamcdf(1/365,1,1)) );
+if Param(9)<0.5 && Param(9)>1/365
+    gammaPrior = log( gampdf(Param(9),1,1)/(gamcdf(0.5,1,1)-gamcdf(1/365,1,1)) );
 else
     gammaPrior=log(0);
 end
@@ -96,7 +94,7 @@ else
 end
 
 %prior on R0
-R0=MakeR0( Param(1:10) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
+R0=MakeR0( Param(1:9) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
 if R0>1
     R0Prior=log(normpdf(R0,15,1));
 else
@@ -104,7 +102,7 @@ else
 end
 
 %sum of log prior probabilities
-PriorProbabilities=  omega1Prior + omega2Prior  +nuPrior+ deltaPrior+sigmaPrior + sum(ReportingPrior)+sum(thetaPrior) ...
+PriorProbabilities=  omega1Prior  +nuPrior+ deltaPrior+sigmaPrior + sum(ReportingPrior)+sum(thetaPrior) ...
     +sum(dampPrior) + gammaPrior+kPrior +dPrior+DispersionPrior + R0Prior;
 
 end
