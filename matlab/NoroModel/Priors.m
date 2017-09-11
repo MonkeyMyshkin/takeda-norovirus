@@ -21,77 +21,68 @@ function [ PriorProbabilities ] = Priors(Param,theta,ReportingParam,Dispersion,k
 %PriorProbabilities=sum of log prior probabilities 
 %%
 %seasonal forcing amplitude
-omega1Prior = log(unifpdf(Param(3),0.01,0.5));
+if Param(3)>0.01 && Param(3)<0.3
+    omega1Prior = log(gampdf(Param(3),0.15,1)/(gamcdf(0.3,0.15,1)-gamcdf(0.01,0.15,1)));
+else
+    omega1Prior = log(0);
+end
 
 
 %scaling of asymptomatic infectiousness
-nuPrior = log(unifpdf(Param(4)));
+if Param(4)>0 && Param(4)<1
+    nuPrior = log(gampdf(Param(4),1,1)/ (gamcdf(1,1,1)-gamcdf(0,1,1)));
+else
+    nuPrior=log(0);
+end
 
 %loss of immunity
-if Param(5)<1 && Param(5)>1/(30*365)
-    deltaPrior = log( normpdf(Param(5),1/(5.1*365), 5e-5)/(normcdf(1,1/(5.1*365), 5e-5)-normcdf(1/(30*365),1/(5.1*365), 5e-5)) );
+if  Param(5)>1/(10*365) && Param(5)< 2/(365) %longer than 6 months, less than ten years
+    deltaPrior = log( gampdf(Param(5),1/(2*365),1)/ (gamcdf(2/365,1/(2*365),1)-gamcdf(1/(10*365),1/(2*365),1)));
 else
     deltaPrior =log(0);
 end
 %deltaPrior = log( unifpdf(ParamVector(6),1/(30*365),1));
 
 %proportion of symptomatic
-if Param(7)<=1 && Param(7)>=0
-    sigmaPrior = log(normpdf(Param(7),0.735415,0.0960897));    %from challenge study data and ASYMP_PROB program
-else
-    sigmaPrior=log(0);
-end
+% if Param(7)<=1 && Param(7)>=0
+%     sigmaPrior = log(normpdf(Param(7),0.735415,0.0960897));    %from challenge study data and ASYMP_PROB program
+% else
+%     sigmaPrior=log(0);
+% end
 % sigmaPrior = log(unifpdf(ParamVector(8)));
 
 
 %recovery rate
-if Param(9)<0.5 && Param(9)>1/365
-    gammaPrior = log( gampdf(Param(9),1,1)/(gamcdf(0.5,1,1)-gamcdf(1/365,1,1)) );
-else
-    gammaPrior=log(0);
-end
+gammaPrior = log( gampdf(Param(9),1,1));
 
 %ReportingParam
+ReportingPrior(1:6)=log(unifpdf(ReportingParam,0,1));  %uniform prior just to keep within feasible limits
+    %prior on average reporting rate
+ReportingPrior(7)=log(unifpdf(mean(ReportingParam(1)*[1 ReportingParam(2)*ones(1,2) ReportingParam(3) ReportingParam(4) ReportingParam(5) ReportingParam(6)]),0,0.1));
 
-for i=1:6
-    if ReportingParam(i)<1 && ReportingParam(i)>0
-        
-        ReportingPrior(i)=log(normpdf(ReportingParam(i),1,0.1)/(normcdf(1,1,0.1)-normcdf(0,1,0.1)) );
-    else
-        ReportingPrior(i)=log(0);
-    end
-end
 
 %Dispersion
+DispersionPrior=log(unifpdf(Dispersion,0,0.5));
 
-DispersionPrior=log(unifpdf(Dispersion,0,0.4));
 
 %k
-if k<2
-    kPrior=log( gampdf(k,1,1)/(gamcdf(2,1,1)-0) );
-else
-    kPrior=log(0);
-end
+kPrior=log( unifpdf(k,0,2));
 
 %d
-dPrior=log(unifpdf(d));
+% dPrior=log(unifpdf(d));
 
 
 %theta
-for i=1:9
-    if theta(i)<1
-        thetaPrior(i)=log(normpdf(theta(i),1,0.1)/(normcdf(1,1,0.1)-normcdf(0,1,0.1)) );
-    else
-        thetaPrior(i)=log(0);
-    end
-end
+% for i=1:9
+%     if theta(i)<1
+%         thetaPrior(i)=log(normpdf(theta(i),1,0.1)/(normcdf(1,1,0.1)-normcdf(0,1,0.1)) );
+%     else
+%         thetaPrior(i)=log(0);
+%     end
+% end
 
 %damping
-if damping(2)<1e-3 && damping(2)>9e-7
-    dampPrior=[log(unifpdf(damping(1),0,1)),log(normpdf(damping(2),1e-3,1e-4)/(normcdf(1e-3,1e-3,1e-4)-normcdf(9e-7,1e-3,1e-4)))];
-else
-    dampPrior=log(0);
-end
+dampPrior=[log(unifpdf(damping(1),0,1)),log(gampdf(damping(2),1e-2,1e-1))];
 
 %prior on R0
 R0=MakeR0( Param(1:9) ,GermanPopulation,ContactMatrix, mu, ageGroupBreaks);
@@ -102,8 +93,8 @@ else
 end
 
 %sum of log prior probabilities
-PriorProbabilities=  omega1Prior  +nuPrior+ deltaPrior+sigmaPrior + sum(ReportingPrior)+sum(thetaPrior) ...
-    +sum(dampPrior) + gammaPrior+kPrior +dPrior+DispersionPrior + R0Prior;
+PriorProbabilities=  omega1Prior  +nuPrior+ deltaPrior + sum(ReportingPrior) ...
+    +sum(dampPrior) + gammaPrior+kPrior +DispersionPrior + R0Prior;
 
 end
 

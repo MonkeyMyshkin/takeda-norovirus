@@ -37,7 +37,7 @@ function [AcceptReject,AccProp,LogLik] = MCMCstep(Param,omega2,mu,theta,ContactM
 ModelOutput=ModelOutput*sum(PopulationSize);
 
 %REPORTING MODEL
-[ ReportingBaseline ] = [Param(10) Param(11)*ones(1,2) Param(12) Param(13) Param(14) Param(15)];
+[ ReportingBaseline ] = Param(10)*[1 Param(11)*ones(1,2) Param(12) Param(13) Param(14) Param(15)]; 
 [ ReportedInfectionNumber] = CappedReporting( ModelOutput, ReportingBaseline, damping );
 
 %LIKELIHOOD
