@@ -1,4 +1,4 @@
-addpath(genpath('C:/Users/kamg2/Documents/takeda-norovirus/matlab'))
+addpath(genpath('C:/Users/kamg2/Documents/takeda-norovirus'))
 %script to run particle filter
 
 %%%% Preliminaries %%%%
