@@ -21,23 +21,23 @@ function [ PriorProbabilities ] = Priors(Param,theta,ReportingParam,Dispersion,k
 %PriorProbabilities=sum of log prior probabilities 
 %%
 %seasonal forcing amplitude
-if ParamVector(3)>0.01 && ParamVector(3)<0.3
-    omega1Prior = log(gampdf(ParamVector(3),0.15,1)/(gamcdf(0.3,0.15,1)-gamcdf(0.01,0.15,1)));
+if Param(3)>0.01 && Param(3)<0.3
+    omega1Prior = log(gampdf(Param(3),0.15,1)/(gamcdf(0.3,0.15,1)-gamcdf(0.01,0.15,1)));
 else
     omega1Prior = log(0);
 end
 
 
 %scaling of asymptomatic infectiousness
-if ParamVector(4)>0 && ParamVector(4)<1
-    nuPrior = log(gampdf(ParamVector(4),1,1)/ (gamcdf(1,1,1)-gamcdf(0,1,1)));
+if Param(4)>0 && Param(4)<1
+    nuPrior = log(gampdf(Param(4),1,1)/ (gamcdf(1,1,1)-gamcdf(0,1,1)));
 else
     nuPrior=log(0);
 end
 
 %loss of immunity
-if  ParamVector(5)>1/(10*365) && ParamVector(5)< 2/(365) %longer than 6 months, less than ten years
-    deltaPrior = log( gampdf(ParamVector(5),1/(2*365),1)/ (gamcdf(2/365,1/(2*365),1)-gamcdf(1/(10*365),1/(2*365),1)));
+if  Param(5)>1/(10*365) && Param(5)< 2/(365) %longer than 6 months, less than ten years
+    deltaPrior = log( gampdf(Param(5),1/(2*365),1)/ (gamcdf(2/365,1/(2*365),1)-gamcdf(1/(10*365),1/(2*365),1)));
 else
     deltaPrior =log(0);
 end
@@ -53,7 +53,7 @@ end
 
 
 %recovery rate
-gammaPrior = log( gampdf(ParamVector(9),1,1));
+gammaPrior = log( gampdf(Param(9),1,1));
 
 %ReportingParam
 ReportingPrior(1:6)=log(unifpdf(ReportingParam,0,1));  %uniform prior just to keep within feasible limits
