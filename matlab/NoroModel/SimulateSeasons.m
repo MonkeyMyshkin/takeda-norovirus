@@ -19,6 +19,9 @@ function [ TIME,SimulationResult ] = SimulateSeasons( Param,omega2,mu ,theta, Co
 %%
 Lmax=81;
 
+%transform so gamma is scaling of duration of symptomatic duration
+Param(9)=Param(8)*Param(9);
+
 %options for solver, nonnegative and high degree of accuracy
 options=odeset('NonNegative',1:9*Lmax,'RelTol',1e-10,'AbsTol',1e-10);
 

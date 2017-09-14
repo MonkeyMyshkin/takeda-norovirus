@@ -19,6 +19,9 @@ load('fixedPoints.mat') %Output from previous simulation as startpoint
 
 options=odeset('NonNegative',1:9*Lmax);%ODE solver option
 
+%transform so gamma is scaling of duration of symptomatic duration
+Param(9)=Param(8)*Param(9);
+
 %contact matrix entered as vector
 CM=reshape(ContactMatrix,[],1)/1e6;
 
