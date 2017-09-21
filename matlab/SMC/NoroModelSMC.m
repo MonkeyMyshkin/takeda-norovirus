@@ -31,19 +31,19 @@ rng('shuffle')
 
 %specifics
 noSeasons=9;    %number of seasons
-noParam=15;     %number of parameters to be estimated
+noParam=14;     %number of parameters to be estimated
 NumberParticles=1000;
 
 %seasonal offset for each age group
 omega2=[0.29345  0.37976  0.56963  0.60415  0.82855  1.0724  1.0357];
 
 %PROPOSAL DISTRIBUTION
-proposal=(0.01^2)*eye(noParam)/noParam;
+proposal=(0.1^2)*eye(noParam)/noParam;
 
 %%%% Generate Particles from priors %%%%
 parfor particleIndex=1:NumberParticles
     %start conditions for each particle
-     alphastart=exp(-5.98405);   %lognrnd(-5.98405,0.185685);
+    alphastart=exp(-5.98405);   %lognrnd(-5.98405,0.185685);
     qstart=(unifrnd(50,400));
     %omega1
     pd=makedist('gamma','a',0.15,'b',1)
@@ -58,11 +58,14 @@ parfor particleIndex=1:NumberParticles
     pd=truncate(pd,1/(10*365),2/365);
     deltastart=random(pd); %from prior
     
-        epsilonstart=1;   %never estimate this
-        sigmastart=0.735415;    %FIXED 
-        psistart=0.5;   %rate symptoms are lost
-    gammastart=gamrnd(1,1); %scaling of symptomatic duration
-    ReportingStart=[unifrnd(0,1),unifrnd(0,1),unifrnd(0,1),unifrnd(0,1),unifrnd(0,1), unifrnd(0,1)];    %reporting 1 is baseline
+    epsilonstart=1;   %never estimate this
+    sigmastart=0.735415;    %FIXED
+    psistart=0.5;   %rate symptoms are lost
+    %gamma
+    pd=makedist('gamma','a',1,'b',1)
+    pd=truncate(pd,0,1);
+    gammastart=random(pd); %from prior %scaling of symptomatic duration
+    ReportingStart=[unifrnd(0,1),unifrnd(0,1),unifrnd(0,1)*ones(1,2), unifrnd(0,1), unifrnd(0,1)];    %reporting 1 is baseline
     
     ParamCurrent=([alphastart, qstart, omega1start, nustart, deltastart, epsilonstart, sigmastart, psistart, gammastart, ReportingStart]);
     
@@ -73,10 +76,10 @@ parfor particleIndex=1:NumberParticles
     
     %contact structure
     kPar=unifrnd(0.01,2);  %from prior
-        dPar=0;    %FIXED
+    dPar=0;    %FIXED
     
     %damping
-    dampPar=[unifrnd(0,1),gamrnd(1e-2,1)]; %scaling factor for damping parameters between 0 and 1 because damping is less for the young
+    dampPar=[unifrnd(0,1),gamrnd(1e-1,1e-2)]; %scaling factor for damping parameters between 0 and 1 because damping is less for the young
     
     %susceptibility of recovered individuals
     thetaPar = zeros(1,noSeasons);  %NONE, FIXED
@@ -158,27 +161,29 @@ for IterIndex=IterIndex:100
         %%%% Propose new particle %%%%%
         ParamProp=ParamCurrent; %keep old parameters for fixed parameters
         
-        if IterIndex>1 && rand(1)<0.9  %this adapts 90% of the time
+        if IterIndex>10 && rand(1)<0.9  %this adapts 90% of the time
             %save the covariance for the transition kernel
-            adapt=cov(PARTICLE(:,[2:5,9:17,19:20]))* 2;
+            adapt=cov(PARTICLE(:,[2:5,9:12,14:17,19:20]))* 2;
             %indexes correspond to the parameters we are estimating
             
-            New=(mvnrnd([ParamCurrent([2:5,9:15]),DispersionPar,kPar,dampPar],adapt));
+            New=(mvnrnd([ParamCurrent([2:5,9:12,14:15]),DispersionPar,kPar,dampPar],adapt));
             TransitionKernelCovariance=validateCovMatrix(adapt);
             %validateCovMatrix just makes sure no numerical error renders the covariance matrix non-positive-definite
         else
             %otherwise use proposal distribution defined at start
-            New=(mvnrnd([ParamCurrent([2:5,9:15]),DispersionPar,kPar,dampPar],proposal));
+            New=(mvnrnd([ParamCurrent([2:5,9:12,14:15]),DispersionPar,kPar,dampPar],proposal));
             TransitionKernelCovariance=proposal;
         end
         %assign proposed parameters
         ParamProp(2:5)=New(1:4);
         ParamProp(9)=New(5);
-        ParamProp(10:15)=New(6:11);
-        DispersionProp=New(12);
-        kProp=New(13);
-        dampProp=New(14:15);
-        %thetaProp=New(16:end);
+        ParamProp(10:12)=New(6:8);
+        ParamProp(13)=New(8);
+        ParamProp(14)=New(9);
+        ParamProp(15)=New(10) ;
+        DispersionProp=New(11);
+        kProp=New(12);
+        dampProp=New(13:14);
         
         %ParamPropParticle
         PRP=[ParamProp DispersionProp kProp dPar dampProp thetaPar];
@@ -218,15 +223,16 @@ for IterIndex=IterIndex:100
             LL(particleIndex)=LLProp(particleIndex);
         else
             nP= CurrentResampledPARTICLE;
+            NoAccept(particleIndex)=0;
         end
         
         
-        TransitionKernel(particleIndex)=mvnpdf(nP([2,3,4,5,9,10:15,16,17,19:20]),CurrentResampledPARTICLE([2,3,4,5,9,10:15,16,17,19:20]),TransitionKernelCovariance);
+        TransitionKernel(particleIndex)=mvnpdf(nP([2,3,4,5,9,10:12,14:15,16,17,19:20]),CurrentResampledPARTICLE([2,3,4,5,9,10:12,14:15,16,17,19:20]),TransitionKernelCovariance);
         newPARTICLE(particleIndex,:)=nP;
     end
     
     PARTICLE=newPARTICLE;
-    
+    NumberAccepted(IterIndex)=mean(NoAccept);
     AccCurrent(isinf(AccCurrent))=nan; %ignore infinite values
     %%%% Calculate Weights %%%%
     %IF NOT RESAMPLING AT EVERY STEP
