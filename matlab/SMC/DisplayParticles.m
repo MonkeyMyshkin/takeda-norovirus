@@ -13,7 +13,7 @@ x0=PlotPARTICLES( maxlike, x, z,1);
 drawnow
 
 %%  Plot matrix of correlations and posteriors
-EstIndex=[2:5,9:17,19:20];
+EstIndex=[2:5,9:11,13:17,19:20];
 figure
 [S,AX,BigAx,H,HAx] =plotmatrix(PARTICLE(:,EstIndex),'k.');  h=get(gcf,'children'); set(h,'FontSize',10)
 Correlations=corrcoef(PARTICLE(:,EstIndex));

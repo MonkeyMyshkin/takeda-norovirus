@@ -58,7 +58,7 @@ gammaPrior = log( gampdf(Param(9),1,1));
 %ReportingParam
 ReportingPrior(1:6)=log(unifpdf(ReportingParam,0,1));  %uniform prior just to keep within feasible limits
     %prior on average reporting rate
-ReportingPrior(7)=log(unifpdf(mean(ReportingParam(1)*[1 ReportingParam(2)*ones(1,2) ReportingParam(3) ReportingParam(4) ReportingParam(5) ReportingParam(6)]),0,0.1));
+ReportingPrior(7)=log(unifpdf(mean([ReportingParam(1)*[1 ReportingParam(2)*ones(1,2) ReportingParam(3) ReportingParam(4) ReportingParam(5)] ReportingParam(6)]),0,0.1));
 
 
 %Dispersion

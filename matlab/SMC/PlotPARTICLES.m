@@ -54,7 +54,7 @@ x0=MakeInitialConditions( ParamFinal,omega2,theta,mu , NewContactMatrix );
 ModelOutput=ModelOutput.*sum(PopulationSize);
 
 %ReportingParam is magnitude of reporting factor
-[ ReportingBaseline ] = ParamFinal(10)*[1 ParamFinal(11)*ones(1,2) ParamFinal(12) ParamFinal(13) ParamFinal(14) ParamFinal(15)];
+[ ReportingBaseline ] = [ParamFinal(10)*[1 ParamFinal(11)*ones(1,2) ParamFinal(12) ParamFinal(13) ParamFinal(14)] ParamFinal(15)];
 [ ReportedInfectionNumber] = CappedReporting( ModelOutput, ReportingBaseline, damp );
 
 noSamples=1;

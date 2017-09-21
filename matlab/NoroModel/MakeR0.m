@@ -64,7 +64,22 @@ end
 
 NGM=Transmission/Transition;
 
-R0=max(eig(NGM));
+%In case we want to examine the relative contribution of each age group to
+%R0
+%need NGM of small domain
+NGMs=[eye(Lmax);zeros(3*Lmax,Lmax)].'*NGM*[eye(Lmax);zeros(3*Lmax,Lmax)];
 
+[V,D]=eig(NGMs);
+[R0,ind]=max(diag(D));
+
+%calculate relative contribution to R0 of all age groups
+%dominant eigenvector
+eivec=V(:,ind);
+%normalise
+eivec=eivec/sum(eivec);
+%relative contribution is 
+Roi=sum(NGMs).*eivec.';
+% figure
+% plot(Roi)
 end
 
