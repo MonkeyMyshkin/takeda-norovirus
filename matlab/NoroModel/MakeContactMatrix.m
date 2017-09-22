@@ -97,7 +97,7 @@ contactMatrix=zeros(noAgeGroups);
 for index = 1 : noAgeGroups
     for jndex = 1 : noAgeGroups
         
-        contactMatrix(index,jndex) = 0.5 * ( ContactAgesPerAgeGroup(index,jndex)/ T(index) + ContactAgesPerAgeGroup(jndex,index)/ T(jndex) );
+        contactMatrix(index,jndex) = ( ContactAgesPerAgeGroup(index,jndex)* T(index) + ContactAgesPerAgeGroup(jndex,index)* T(jndex) )/(2*T(index));
         
     end
 end
