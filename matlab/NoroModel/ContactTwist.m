@@ -44,8 +44,8 @@ SymContactMatrix=zeros(noAgeGroups);
 for index = 1 : noAgeGroups
     for jndex = 1 : noAgeGroups
         
-        AsymContactMatrix(index,jndex) =NewContactMatrix(index,jndex)/ T(index);
-        SymContactMatrix(index,jndex) =0.5 * ( NewContactMatrix(index,jndex)/ T(index) + NewContactMatrix(jndex,index)/ T(jndex) );
+        AsymContactMatrix(index,jndex) =NewContactMatrix(index,jndex);
+        SymContactMatrix(index,jndex) =( ContactAgesPerAgeGroup(index,jndex)* T(index) + ContactAgesPerAgeGroup(jndex,index)* T(jndex) )/(2*T(index));
     end
 end
 
