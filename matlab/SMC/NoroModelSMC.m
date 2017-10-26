@@ -35,7 +35,7 @@ noParam=14;     %number of parameters to be estimated
 NumberParticles=1000;
 
 %seasonal offset for each age group
-omega2=[0.29345  0.37976  0.56963  0.60415  0.82855  1.0724  1.0357];
+load('omega2.mat')
 
 %PROPOSAL DISTRIBUTION
 proposal=(0.1^2)*eye(noParam)/noParam;
