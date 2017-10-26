@@ -30,6 +30,7 @@ end
 
 %calculate the mean maximumIndex
 meanMaxIndex=mean(maximumIndex);
+meanMaxIndex=meanMaxIndex+33;
 
 %plot
 for index=1:7
