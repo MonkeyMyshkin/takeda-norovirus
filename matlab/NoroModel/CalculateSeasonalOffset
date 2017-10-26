@@ -1,0 +1,47 @@
+%calcualte seasonal offset for stratifed case notifications
+figure
+
+load('GermanCaseNotification.mat')
+StratifiedCases= AgeStratify( GermanCaseNotification, ageGroupBreaks );
+
+SmoothedCases=smoothdata(StratifiedCases); %calculates moving average of data
+
+%visually compare the two
+for jndex=1:length(StratifiedCases(1,:))
+    subplot(4,2,jndex) ; hold on
+    plot(SmoothedCases(:,jndex))
+    plot(StratifiedCases(:,jndex))
+end
+
+%now we need to find where the maximum value occurs for each age group and
+%each complete season
+%first part season is 33 weeks long
+maximumIndex=zeros(7,length(StratifiedCases(1,:)));
+
+for index=1:7
+    for jndex=1:length(StratifiedCases(1,:))
+        [maximumValue, maximumIndex(index,jndex)]= max(SmoothedCases(33+1+(index-1)*52:33+1+index*52,jndex));
+        
+        subplot(4,2,jndex);
+        hold on
+        plot([33+1+(index-1)*52 + maximumIndex(index,jndex),33+1+(index-1)*52 + maximumIndex(index,jndex)], [0, maximumValue]) %plot a line where maximum occurs for each season
+    end
+end
+
+%calculate the mean maximumIndex
+meanMaxIndex=mean(maximumIndex);
+
+%plot
+for index=1:7
+    for jndex=1:length(StratifiedCases(1,:))
+        subplot(4,2,jndex) ; hold on
+        plot([33+1+(index-1)*52 + meanMaxIndex(jndex),33+1+(index-1)*52 + meanMaxIndex(jndex)], [0, maximumValue], 'k')
+    end
+end
+
+%now we need to get this in the right form for the seasonal forcing term 
+%Z=(1+omega1.*cos(2*pi*t/364+omega2));
+
+omega2= pi/2 - (2*pi*meanMaxIndex*7)/364 ;
+
+save('omega2','omega2')
