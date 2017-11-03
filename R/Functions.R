@@ -361,7 +361,7 @@ return(cbind(FPs,0,rowSums(FPs)))
 
               
 
-SimulateSeasons <- function(params, mu,theta,ContactMatrix,max_age,burnin)
+SimulateSeasons <- function(params, B, mu,theta,ContactMatrix,max_age,burnin)
 {
 # SimulateSeasons: Takes input parameters and initial conditions and solves the system of 
 # ODEs for all
@@ -389,7 +389,7 @@ oot<-try(lsoda(x,seq(0,burnin*365,7.0),NoroDyn,parms=params,Cm=ContactMatrix,mu=
 
 # Season 1
 
-oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(33,52*7,7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=0))
+oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(0,33*7,7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=theta[1]))
 
 cases = diff(oot[,1+index2(9,1:81,max_age)])
 
@@ -398,7 +398,7 @@ cases = diff(oot[,1+index2(9,1:81,max_age)])
 for(i in 2:8)
 {
 
-oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(0,52*7,7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=0))
+oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(33*7+(52*7)*(i-2),33*7 +(52*7)*(i-1),7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=theta[i]))
 
 cases = rbind(cases,diff(oot[,1+index2(9,1:81,max_age)]))
 
@@ -406,22 +406,73 @@ cases = rbind(cases,diff(oot[,1+index2(9,1:81,max_age)]))
 
 # Season 9
 
-oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(0,21*7,7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=0))
+oot<-try(lsoda(oot[dim(oot)[1],2:dim(oot)[2]],seq(33*7 +(52*7)*(8-1),33*7 +(52*7)*(8-1) + 21*7,7),NoroDyn,parms=params,Cm=ContactMatrix,mu=mu,max_age=max_age,B=B,theta=theta[9]))
 
 cases = rbind(cases,diff(oot[,1+index2(9,1:81,max_age)]))
 
 #if(is.null(dim(oot)) || dim(oot)[1] != 209 ){return(NA)}       
 #else{ cases = oot[,seq(1,81)*7 + 1]}        
 
-return()
+return(cases)
+
+}
+
+CappedReporting <- function(ModelOutput, ReportingBaseline, damping)
+{
+
+# CappedReporting implements incidence-proportional reporting
+
+# INPUTS
+# ModelOutput= cases per week in each agegroup
+# ReportingBaseline=Proportion of cases reported before 2011
+# quenching= values for self correcting Markov process: quenching(1)in [0,1]
+# scales quenching(2) for ages up to 37
+
+# OUTPUTS
+# ReportedInfectionNumber=Model output with reporting model applied
+
+noAgeGroups = dim(ModelOutput)[2]
+
+ReportedInfectionNumber = ModelOutput*0
+
+for( i in 1:4) #damping for <37
+{
+ ReportedInfectionNumber[1:(33+2*52+1),i] = ModelOutput[1:(33+2*52+1),i] * ReportingBaseline[i]
+ ReportedInfectionNumber[(33+2*52+1):418,i] = ModelOutput[(33+2*52+1):418,i] * ReportingBaseline[i]*exp(-damping[1]*damping[2]*ModelOutput[(33+2*52+1):418,i])
+}
+
+for (i in c(5:noAgeGroups))    #damping for >37
+{
+    ReportedInfectionNumber[1:(33+2*52+1),i]=ModelOutput[1:(33+2*52+1),i]*ReportingBaseline[i]
+    ReportedInfectionNumber[(33+2*52+1):418,i]=ModelOutput[(33+2*52+1):418,i]*ReportingBaseline[i]*exp(-damping[2]*ModelOutput[(33+2*52+1):418,i]);
+}
+
+return(ReportedInfectionNumber)
 
 }
 
 
-NBLikelihood <- function(params,mu,theta,ContactMatrix,MaxAge,ageGroupBreaks)
+
+NBLikelihood <- function(params,B,mu,theta,ContactMatrix,MaxAge,ageGroupBreaks,StratifiedCases)
 {
 
-SimulationResult <-SimulateSeasons(params,mu,theta,ContactMatrix,MaxAge,ageGroupBreaks);
+p_sim = c(params[1],params[2],params[3],params[4],params[5],1 ,0.735415 ,0.5,params[6])
+#names(p_sim) <- c('alpha','q','omega','nu','delta','epsilon','sigma','psi','gamma')
+
+x<-SimulateSeasons(p_sim,B, mu,theta,Cm,Lmax,10)
+
+ProbC <- AgeStratify( x, ageGroupBreaks )
+StratifiedSim<-t(t(ProbC)*PopulationSize)
+
+ReportingBaseline = c(params[7]*c(1,rep(params[8],2),params[9],params[10],params[11]),params[12]) 
+
+Dispersion = params[13]
+
+damping = c(params[14],params[15])
+
+ReportedInfectionNumber  = CappedReporting(StratifiedSim,ReportingBaseline,damping)
+
+sum(dnbinom(x=StratifiedCases,mu=ReportedInfectionNumber,size=Dispersion,log=TRUE))
 
 }
 

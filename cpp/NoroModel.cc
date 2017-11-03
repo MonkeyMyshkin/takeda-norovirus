@@ -57,7 +57,7 @@ List NoroDyn(double t, NumericVector x, NumericVector params, NumericMatrix Cm, 
   	FOI[a] = 0.0;
     for( int a2=0; a2<max_age; a2++ )
     	{
-    		double Z = (1+omega*sin(offset[a] + 2*pi*t/365.0));
+    		double Z = (1+omega*cos(offset[a] + 2*pi*t/365.0));
         	FOI[a] += q*Z*Cm(a,a2)*(x[index2(I,a2,max_age)] + nu * x[index2(A,a2,max_age)]);
         }
   }

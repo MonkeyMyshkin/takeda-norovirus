@@ -13,6 +13,7 @@ ageGroupBreaks=c(8,18,26,37,50,70)
 noAgeGroups=length(ageGroupBreaks)+1
 #calculate population sizes for these age groups
 PopulationSize=AgeStratify(GermanPopulation,ageGroupBreaks)
+StratifiedCases<-AgeStratify( GermanCaseNotification, ageGroupBreaks )
 
 #CONTACT MATRIX
 
@@ -22,7 +23,6 @@ contactMatrix = oot[[1]]
 ContactAgesPerAgeGroup = oot[[2]]
 T = oot[[3]]
 rm(oot)
-
 
 #DEATH FUNCTION
 #maximum age group in case notifications is 80. Therefore our max age will
@@ -35,9 +35,6 @@ mu=MakeMu(Lmax);    #daily death rate
 Cm = Expand(contactMatrix,ageGroupBreaks,Lmax)
        
 B = (17.0/1000)/365.0
-        
-
-
 
     
         
