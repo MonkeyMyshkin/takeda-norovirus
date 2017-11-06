@@ -32,7 +32,7 @@ NBLikelihood(c(params,ReportingBaseline,damping),B,mu,theta,Cm,Lmax,ageGroupBrea
 #specifics
 noSeasons = 9    #number of seasons
 noParam = 14     #number of parameters to be estimated
-noParticles=16   #number of particles
+noParticles=100   #number of particles
 
 # Initial covariance matrix for multivariate normal proposal distribution
 init_proposal=(0.1^2)*diag(rep(1,noParam))/noParam;
@@ -41,7 +41,7 @@ require('Matrix')
 require('parallel')
 require('mnormt')
 
-init_pop <- lapply(1:16,function(x){sample_prior()})
+init_pop <- lapply(1:noParticles,function(x){sample_prior()})
 out_list<-mclapply(init_pop,NBLikelihood,mc.cores=4,B,mu,theta,Cm,Lmax,ageGroupBreaks,StratifiedCases)
 particle_likelihood <- unlist(out_list)
 particle_weights <- rep(1,noParticles)
