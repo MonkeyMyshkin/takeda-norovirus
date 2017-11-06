@@ -35,13 +35,11 @@ return(ReportedInfectionNumber)
 }
 
 
-
 NBLikelihood <- function(params,B,mu,theta,ContactMatrix,MaxAge,ageGroupBreaks,StratifiedCases)
 {
 
 p_sim = c(exp(-5.98405),params[1],params[2],params[3],params[4],1 ,0.735415 ,0.5,params[5])
 #names(p_sim) <- c('alpha','q','omega','nu','delta','epsilon','sigma','psi','gamma')
-
 x<-SimulateSeasons(p_sim,B, mu,theta,Cm,Lmax,10)
 
 ProbC <- AgeStratify( x, ageGroupBreaks )
@@ -112,4 +110,111 @@ prob = numeric(14)
  return(prob) 
 }
 
+ESS <- function(weight)
+{
+#ESS calculates effective sample size based on weights
+
+# INPUTS
+# weight=vector of particle weights 
+
+# OUTPUTS
+# ESS=effective samplesize
+
+# Do not assume weights are normalised, so do so here
+weight = weight / sum(weight)
+return(1/sum(weight^2))
+}
+
+filter_particles <- function(particles, particle_likelihood, particle_weights, init_proposal,adapt=FALSE)
+{
+
+  # Normalise weights 
+  proposed_particles = particles
+  particle_weights=particle_weights/sum(particle_weights)
+  #weights(isnan(weights))=0
+
+  proposal_cov = init_proposal
+
+  # RESAMPLING 
+    
+  # If ESS Falls below threshold resample particles using weights 
+  if( ESS(particle_weights)/noParticles < 0.7)
+  {
+        # Resample particles 
+        samp_ind = sample(1:noParticles,noParticles,prob=particle_weights,replace=TRUE)
+        particles=particles[samp_ind]
+        particle_likelihood = particle_likelihood[samp_ind]
+        particle_weights=(1/noParticles)*rep(1,noParticles);
+        resampled=TRUE;
+  } else{
+        resampled=FALSE;
+		}
+
+ # Propose new particles
+ 
+ # Chose proposal distribtion
+ if(adapt & runif(1)<0.9)
+ { # adapts 90% of the time
+   # calculate covariance for adaptive transition kernel
+   # ensure is positive definite
+   proposal_cov = as.matrix(nearPD(cov(do.call(rbind,new_particles))* 2)$mat)
+   # indexes correspond to the parameters we are estimating
+ }
+ 
+  proposed_particles <- lapply(particles,function(x){rmnorm(1,mean=x,varcov=proposal_cov)})      
+  proposed_likelihood <- unlist(mclapply(proposed_particles,function(x)
+  {
+   # Test proposed values are in range 
+   # two conditions- positive values and within prior ranges 
+    if(min(x) < 0 | !is.finite(sum(prior_prob(x))))  
+    {return(-Inf)}else
+    {NBLikelihood(x,B,mu,theta,Cm,Lmax,ageGroupBreaks,StratifiedCases)}
+  },mc.cores=4))
+
+  accept_reject <- sapply(1:noParticles,function(x){
+  
+  # (log) Likelihood + prior + correction for log parameter transform
+  current = particle_likelihood[x] + sum(prior_prob(particles[[x]])) + sum(particles[[x]])
+  proposed = proposed_likelihood[x] + sum(prior_prob(proposed_particles[[x]])) + sum(proposed_particles[[x]])
+
+   #make sure not to accept NaN values
+  if(is.nan(proposed))
+  {proposed=-Inf}
+
+  if(!is.finite(proposed))  #dealing with Inf
+  {compare=-Inf} else{
+   # Condition should never happen
+  if(current==-Inf)
+  {compare=1}else
+  {
+    compare=exp(current-proposed);   
+  }
+  }
+
+  acc=min(1,(compare));      #define the acceptance probability, scaled as appropriate
+  u=runif(1);
+  if(u<acc)
+   {return(c(TRUE,current,proposed))}else
+   {return(c(FALSE,current,proposed))} 
+  })
+  
+  
+  # Only keep accepted particles, replace rejects with particle from previous round
+  proposed_particles[which(!accept_reject[1,])] = particles[which(!accept_reject[1,])]
+  proposed_likelihood[which(!accept_reject[1,])] = particle_likelihood[which(!accept_reject[1,])]
+
+ print(paste('Acceptance rate: ',mean(accept_reject)))
+  
+  #TransitionKernel(particleIndex)=mvnpdf(nP([2,3,4,5,9,10:12,14:15,16,17,19:20]),CurrentResampledPARTICLE([2,3,4,5,9,10:12,14:15,16,17,19:20]),TransitionKernelCovariance);
+   
+   TransitionKernel = sapply(1:noParticles,function(x){dmnorm(proposed_particles[[x]],mean=particles[[x]],varcov=proposal_cov)})   
+  
+  # Calculate new particle weights 
+    if(resample)
+    {new_weights=(accept_reject[2,]+abs(min(accept_reject[2,]))+1)/sum(TransitionKernel)}else{
+     new_weights= weights*((accept_reject[2,]+abs(min(accept_reject[2,]))+1)/sum(TransitionKernel))}
+
+return(list(proposed_particles,proposed_likelihood,new_weights))
+     
+}
 
